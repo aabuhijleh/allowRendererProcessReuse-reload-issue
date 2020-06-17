@@ -1,10 +1,31 @@
 // Modules to control application life and create native browser window
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import path from "path";
+
+app.allowRendererProcessReuse = true;
+
+let mainWindow: BrowserWindow = null;
+let loadingWindow: BrowserWindow = null;
+
+ipcMain.handle("createWindow", () => {
+  loadingWindow = new BrowserWindow({
+    parent: mainWindow,
+    modal: true,
+    width: 400,
+    height: 200,
+  });
+
+  loadingWindow.loadFile(path.join(__dirname, "../views", "loading.html"));
+});
+
+ipcMain.handle("closeWindow", () => {
+  loadingWindow.close();
+  loadingWindow = null;
+});
 
 function createWindow() {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -14,6 +35,8 @@ function createWindow() {
 
   // and load the index.html of the app.
   mainWindow.loadFile(path.join(__dirname, "../views", "index.html"));
+
+  mainWindow.webContents.openDevTools({ mode: "undocked" });
 
   // Open the DevTools.
   // mainWindow.webContents.openDevTools()
